@@ -25,6 +25,7 @@ import java.nio.charset.StandardCharsets;
 import java.security.KeyStore;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.TimeZone;
 import java.util.UUID;
 
 import javax.annotation.Nonnull;
@@ -48,14 +49,14 @@ import com.helger.phase4.ebms3header.Ebms3UserMessage;
 import com.helger.phase4.mgr.MetaAS4Manager;
 import com.helger.phase4.model.mpc.IMPCManager;
 import com.helger.phase4.model.mpc.MPC;
+import com.helger.phase4.profile.euctp.AS4EuCtpProfileRegistarSPI;
 import com.helger.phase4.profile.euctp.EEuCtpAction;
 import com.helger.phase4.profile.euctp.EEuCtpService;
 import com.helger.phase4.profile.euctp.EuCtpPMode;
 import com.helger.phase4.sender.AbstractAS4UserMessageBuilder.ESimpleUserMessageSendResult;
 import com.helger.phase4.util.Phase4Exception;
+import com.helger.scope.mgr.ScopeManager;
 import com.helger.security.keystore.EKeyStoreType;
-import com.helger.servlet.mock.MockServletContext;
-import com.helger.web.scope.mgr.WebScopeManager;
 
 public class MainPhase4EuCtpSenderExample
 {
@@ -80,8 +81,10 @@ public class MainPhase4EuCtpSenderExample
 
   public static void main (final String [] args)
   {
+    TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
+
     // Create scope for global variables that can be shut down gracefully
-    WebScopeManager.onGlobalBegin (MockServletContext.create ());
+    ScopeManager.onGlobalBegin ("test");
 
     // Optional dump (for debugging purpose only)
     AS4DumpManager.setIncomingDumper (new AS4IncomingDumperFileBased ());
@@ -96,9 +99,10 @@ public class MainPhase4EuCtpSenderExample
         aSslKeyStore.load (aIS, aKeyStorePassword);
       }
 
+      MetaAS4Manager.getProfileMgr().setDefaultProfileID(AS4EuCtpProfileRegistarSPI.AS4_PROFILE_PUSH_ID);
+
       final Phase4EuCtpHttpClientSettings aHttpClientSettings = new Phase4EuCtpHttpClientSettings (aSslKeyStore,
                                                                                                    aKeyStorePassword);
-
       final AS4CryptoProperties as4SigningProperties = _buildAs4CryptoProperties ();
       final AS4CryptoFactoryProperties cryptoFactoryProperties = new AS4CryptoFactoryProperties (as4SigningProperties);
 
@@ -122,7 +126,7 @@ public class MainPhase4EuCtpSenderExample
     }
     finally
     {
-      WebScopeManager.onGlobalEnd ();
+      ScopeManager.onGlobalEnd ();
     }
   }
 
